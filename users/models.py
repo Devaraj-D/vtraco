@@ -1,5 +1,11 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+
+
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role_id=None, **extra_fields):
@@ -32,6 +38,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     logo = models.ImageField(upload_to='logos/', null=True, blank=True)
     company_name = models.CharField(max_length=255, null=True, blank=True)
     contact = models.CharField(max_length=15, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_delete = models.BooleanField(default=False)
@@ -52,5 +59,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+class OTPVerification(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"{self.user.email} - OTP: {self.otp}" 
 
 

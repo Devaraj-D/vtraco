@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Django stuff
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+db.sqlite3-journal
+
+# Media and static files
+/media/
+staticfiles/
+static/
+
+# Local settings
+.env
+*.env
+.env.*
+
+# VS Code and IDEs
+.vscode/
+.idea/
+*.swp
+
+# Mac & system files
+.DS_Store
+Thumbs.db
+
+# Migrations (optional: keep if you want to track migrations in git)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+**/migrations/*.pyo
+
+# MySQL/PostgreSQL dumps
+*.sql
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Pytest
+.cache/
+.pytest_cache/

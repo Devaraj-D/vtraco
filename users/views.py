@@ -185,7 +185,7 @@ def add_employee(request):
         password = generate_password()
 
         employee = User.objects.create_user(
-            username=request.data.get('employee_name'),
+            username=request.data.get('email'),
             employee_name=request.data.get('employee_name'),
             email=email,
             password=password,

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role_id=None, **extra_fields):
@@ -36,12 +37,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_delete = models.BooleanField(default=False)
     joining_date = models.DateField(null=True, blank=True)
+    is_current_employee = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     designation = models.CharField(max_length=100, null=True, blank=True)
     employee_name = models.CharField(max_length=255, null=True, blank=True)
     dob = models.DateField(null=True, blank=True)
     salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
+
 
 
     objects = CustomUserManager()
@@ -52,5 +56,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+class Attendance(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date = models.DateField()
+    day = models.CharField(max_length=20)
+    login_time = models.TimeField()
+    logout_time = models.TimeField(null=True, blank=True)
+    eod_report = models.TextField(blank=True)
+    document = models.FileField(upload_to='attendance_docs/', null=True, blank=True)
 
+    def _str_(self):
+        return f"{self.user.username} - {self.date}"
 

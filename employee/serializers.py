@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Attendance, EmployeeRequest, Salary
+from .models import Attendance, EmployeeRequest, Salary, Notification
 from users.models import CustomUser
 
 class AttendanceSerializer(serializers.ModelSerializer):
@@ -27,3 +27,9 @@ class SalarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Salary
         fields = ['id', 'date', 'attendance_type', 'salary', 'status']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'message', 'is_read', 'created_at']

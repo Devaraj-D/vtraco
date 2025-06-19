@@ -1,6 +1,11 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+
+
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role_id=None, **extra_fields):
@@ -33,6 +38,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     logo = models.ImageField(upload_to='logos/', null=True, blank=True)
     company_name = models.CharField(max_length=255, null=True, blank=True)
     contact = models.CharField(max_length=15, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_delete = models.BooleanField(default=False)
@@ -44,8 +50,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     employee_name = models.CharField(max_length=255, null=True, blank=True)
     dob = models.DateField(null=True, blank=True)
     salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-
+    
 
 
     objects = CustomUserManager()
@@ -56,15 +61,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-class Attendance(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date = models.DateField()
-    day = models.CharField(max_length=20)
-    login_time = models.TimeField()
-    logout_time = models.TimeField(null=True, blank=True)
-    eod_report = models.TextField(blank=True)
-    document = models.FileField(upload_to='attendance_docs/', null=True, blank=True)
+class OTPVerification(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    def _str_(self):
-        return f"{self.user.username} - {self.date}"
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"{self.user.email} - OTP: {self.otp}" 
+
 

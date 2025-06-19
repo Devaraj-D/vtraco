@@ -15,13 +15,21 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import parser_classes
-from .utils import send_invitation_email
+from .utils import send_invitation_email,send_otp_email
 from django.core.mail import send_mail
 import random
 import string
+from django.conf import settings
+from .models import OTPVerification,CustomUser
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+
 
 
 User = get_user_model()
+
 
 # Email regex
 EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -132,6 +140,26 @@ def LoginView(request):
         })
     else:
         return Response({"error": "Invalid email or password"}, status=401)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def LogoutView(request):
+    try:
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+
+        return Response({
+            "status": "success",
+            "message": "Logout successful. Token blacklisted."
+        }, status=status.HTTP_205_RESET_CONTENT)
+
+    except TokenError:
+        return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
         
 
 class AddEmployerAPIView(APIView):
@@ -209,3 +237,66 @@ def add_employee(request):
 
     except Exception as e:
         return Response({"status": "error", "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ForgotPasswordRequestView(APIView):
+    authentication_classes = []  # Disable JWT for this public endpoint
+    permission_classes = []
+
+    def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "No user with this email"}, status=status.HTTP_404_NOT_FOUND)
+
+        otp_code = str(random.randint(1000, 9999))
+
+        OTPVerification.objects.update_or_create(
+            user=user,
+            defaults={"otp": otp_code, "created_at": timezone.now()}
+        )
+
+        send_otp_email(email=user.email, username=user.username, otp=otp_code)
+
+        return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_otp(request):
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+    new_password = request.data.get('new_password')
+
+    if not all([email, otp, new_password]):
+        return Response({"error": "Email, OTP, and new_password are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = CustomUser.objects.get(email=email)
+        otp_entry = OTPVerification.objects.get(user=user, otp=otp)
+
+        # Check if OTP is expired (e.g., valid for 10 mins)
+        if timezone.now() - otp_entry.created_at > timedelta(minutes=10):
+            return Response({"error": "OTP has expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Set new password securely
+        user.set_password(new_password)
+        user.save()
+
+        # Optionally delete the used OTP
+        otp_entry.delete()
+
+        return Response({
+            "status": "success",
+            "message": "Password reset successfully."
+        }, status=status.HTTP_200_OK)
+
+    except CustomUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    except OTPVerification.DoesNotExist:
+        return Response({"error": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
+    
+

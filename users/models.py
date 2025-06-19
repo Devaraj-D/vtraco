@@ -54,6 +54,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
     objects = CustomUserManager()
+    
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -63,6 +64,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class OTPVerification(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
+
+
     otp = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -72,4 +76,14 @@ class OTPVerification(models.Model):
     def __str__(self):
         return f"{self.user.email} - OTP: {self.otp}" 
 
+# class Attendance(models.Model):
+#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='attendance_from_users')
+#     date = models.DateField()
+#     day = models.CharField(max_length=20)
+#     login_time = models.TimeField()
+#     logout_time = models.TimeField(null=True, blank=True)
+#     eod_report = models.TextField(blank=True)
+#     document = models.FileField(upload_to='attendance_docs/', null=True, blank=True)
 
+#     def __str__(self):
+#         return f"{self.user.username} - {self.date}"

@@ -1,8 +1,10 @@
 from django.db import models
 from django.conf import settings
+from users.models import CustomUser
 
 class Attendance(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='employee_attendances')
+    
     date = models.DateField()
     day = models.CharField(max_length=20)
     login_time = models.TimeField()
@@ -20,7 +22,8 @@ class Salary(models.Model):
         ('absent', 'Absent'),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='salaries')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='employee_salaries')
+    
     date = models.DateField()
     attendance_type = models.CharField(
         max_length=10,
@@ -63,3 +66,16 @@ class Notification(models.Model):
 
     def __str__(self): 
         return f"Notification for {self.user.email}"
+    
+
+class Attendance(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='attendance_from_users')
+    date = models.DateField()
+    day = models.CharField(max_length=20)
+    login_time = models.TimeField()
+    logout_time = models.TimeField(null=True, blank=True)
+    eod_report = models.TextField(blank=True)
+    document = models.FileField(upload_to='attendance_docs/', null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date}"

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'employee',
     'employer',
     'rest_framework_simplejwt.token_blacklist',
+    'corsheaders'
 
 
 ]
@@ -75,6 +76,9 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
+CORS_ALLOWED_ORIGINS=[
+    "http://localhost:5173"
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -84,6 +88,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'attendance.urls'

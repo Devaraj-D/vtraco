@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Attendance, EmployeeRequest, Notification
+from .models import Attendance, Notification
 from datetime import datetime
 import calendar
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -166,41 +166,41 @@ def update_profile_info(request):
         }
     }, status=status.HTTP_200_OK)
 
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def update_employee_request(request, request_id):
-    try:
-        employee_request = EmployeeRequest.objects.get(id=request_id)
-    except EmployeeRequest.DoesNotExist:
-        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
+# @api_view(['PUT'])
+# @permission_classes([IsAuthenticated])
+# def update_employee_request(request, request_id):
+#     try:
+#         employee_request = EmployeeRequest.objects.get(id=request_id)
+#     except EmployeeRequest.DoesNotExist:
+#         return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    new_status = request.data.get('status')
-    new_request_type = request.data.get('request_type')
-    notification_message = None
+#     new_status = request.data.get('status')
+#     new_request_type = request.data.get('request_type')
+#     notification_message = None
 
-    if new_status and new_status != employee_request.status:
-        employee_request.status = new_status
+#     if new_status and new_status != employee_request.status:
+#         employee_request.status = new_status
 
-        if new_status == 'resolved':
-            notification_message = "Your request has been resolved."
-        elif new_status == 'rejected':
-            notification_message = "Your request has been rejected."
+#         if new_status == 'resolved':
+#             notification_message = "Your request has been resolved."
+#         elif new_status == 'rejected':
+#             notification_message = "Your request has been rejected."
 
-    if new_request_type:
-        employee_request.request_type = new_request_type
+#     if new_request_type:
+#         employee_request.request_type = new_request_type
 
-    employee_request.save()
+#     employee_request.save()
 
-    if notification_message:
-        Notification.objects.create(
-            user=employee_request.user,
-            message=notification_message
-        )
+#     if notification_message:
+#         Notification.objects.create(
+#             user=employee_request.user,
+#             message=notification_message
+#         )
 
-    return Response({
-        "status": "success",
-        "message": "Employee request updated successfully."
-    }, status=status.HTTP_200_OK)
+#     return Response({
+#         "status": "success",
+#         "message": "Employee request updated successfully."
+#     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

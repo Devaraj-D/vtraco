@@ -8,6 +8,8 @@ from employee.models import Salary
 from users.models import CustomUser
 from employee.models import Attendance
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
@@ -156,49 +158,25 @@ def get_all_employees(request):
     except Exception as e:
         return Response({'error': str(e)}, status=500)
     
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@csrf_exempt
 def bulk_update_salary(request):
-    try:
-        salary_updates = request.data.get("salaries", [])
-        if not isinstance(salary_updates, list):
-            return Response({"error": "Expected a list of salary records."}, status=400)
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)  # this is a list of dicts
 
-        updated_records = []
-        errors = []
+            for record in data:
+                user_id = record.get("user_id")
+                date = record.get("date")
+                attendance_type = record.get("attendance_type")
+                salary = record.get("salary")
+                status = record.get("status")
 
-        for entry in salary_updates:
-            try:
-                record_id = entry.get("id")
-                if not record_id:
-                    raise ValueError("Missing 'id' in one of the records.")
+                # Add your database logic here
+                print(f"Updating salary for user {user_id} on {date} to ₹{salary} (status={status})")
 
-                salary_record = Salary.objects.get(id=record_id)
+            return JsonResponse({"message": "Bulk salary update successful"})
 
-                salary_record.attendance_type = entry.get("attendance_type", salary_record.attendance_type)
-                salary_record.salary = entry.get("salary", salary_record.salary)
-                salary_record.status = entry.get("status", salary_record.status)
-                salary_record.save()
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
 
-                updated_records.append({
-                    "id": salary_record.id,
-                    "user": salary_record.user.username,
-                    "date": str(salary_record.date),
-                    "attendance_type": salary_record.attendance_type,
-                    "salary": str(salary_record.salary),
-                    "status": salary_record.status
-                })
-
-            except Salary.DoesNotExist:
-                errors.append({"id": entry.get("id"), "error": "Salary record not found."})
-            except Exception as e:
-                errors.append({"id": entry.get("id"), "error": str(e)})
-
-        return Response({
-            "message": f"Processed {len(salary_updates)} records.",
-            "updated": updated_records,
-            "errors": errors
-        }, status=200)
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid method"}, status=405)

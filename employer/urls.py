@@ -9,5 +9,5 @@ urlpatterns = [
     path('delete_employee/<int:employee_id>/delete/', views.delete_employee, name='delete_employee'),
     path('salary/<int:id>/', views.update_salary, name='update_salary'),
     path('get-all-employees/', get_all_employees, name='get-all-employees'),
-    path('bulk-update-salary', views.bulk_update_salary, name='bulk-update-salary'),
+    path('bulk-update-salary/', bulk_update_salary, name='bulk_update_salary'),
 ]

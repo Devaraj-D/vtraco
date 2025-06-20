@@ -169,3 +169,5 @@ STATIC_ROOT=os.path.join(BASE_DIR,'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SENDGRID_API_KEY = "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"
 DEFAULT_FROM_EMAIL = "admin@vtraco.com"
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'attendance.settings')
